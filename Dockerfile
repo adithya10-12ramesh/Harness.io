@@ -45,4 +45,4 @@ EXPOSE 5000
 
 # Run the application using gunicorn
 # Replace 'app:app' if your Flask app is defined differently
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "tic_tac_toe:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
