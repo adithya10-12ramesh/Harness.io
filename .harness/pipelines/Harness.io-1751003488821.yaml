@@ -53,6 +53,10 @@ pipeline:
                   type: Run
                   spec:
                     shell: Bash
+                    envVariables:
+                      APP_HOST: 13.201.4.222
+                      APP_PORT: "3000"
+                      APP_URL: http://13.201.4.222:3000
                     command: |-
                       echo "<+secrets.getValue(\"ssh_key_pem\")>" > key1.pem
                       chmod 400 key1.pem
@@ -79,6 +83,10 @@ pipeline:
                   type: Run
                   spec:
                     shell: Bash
+                    envVariables:
+                      APP_HOST: 13.201.4.222
+                      APP_PORT: "3000"
+                      APP_URL: http://13.201.4.222:3000
                     command: |-
                       echo "Performing health check on deployed application..."
                       # Wait a bit more for app to fully start
