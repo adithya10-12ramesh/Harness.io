@@ -22,38 +22,50 @@ pipeline:
               - step:
                   identifier: runlinter
                   name: run linter
+                  type: Run
                   spec:
                     command: |-
                       pip install flake8
                       flake8 .
-                  timeout: ""
-                  type: Run
               - step:
                   identifier: setupvirtualenvironment
                   name: setup virtual environment
+                  type: Run
                   spec:
                     command: |-
                       python3 -m venv .venv
                       . .venv/bin/activate
                       python3 -m pip install -r requirements.txt
                       python3 -m pip install -e .
-                  timeout: ""
-                  type: Run
               - step:
                   identifier: dockerbuild
                   name: docker_build
+                  type: BuildAndPushDockerRegistry
                   spec:
                     caching: true
                     connectorRef: <+input>
                     repo: hello/world
                     tags:
                       - latest
-                  timeout: ""
-                  type: BuildAndPushDockerRegistry
+              - step:
+                  identifier: ssh_deploy
+                  name: Deploy via SSH
+                  type: Run
+                  spec:
+                    shell: Bash
+                    command: |-
+                      echo "<+secrets.getValue(\"ssh_key_pem\")>" > key1.pem
+                      chmod 400 key1.pem
+                      ssh -o StrictHostKeyChecking=no -i key1.pem ubuntu@13.201.4.222 'bash -s' <<'ENDSSH'
+                      echo "Connected to host!"
+                      cd /home/ubuntu/my-app
+                      git pull origin main
+                      docker compose up -d --build
+                      ENDSSH
           platform:
             arch: Amd64
             os: Linux
           runtime:
-            spec: {}
             type: Docker
+            spec: {}
         type: CI
