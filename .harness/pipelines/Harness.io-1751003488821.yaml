@@ -3,6 +3,22 @@ pipeline:
   name: Build Harness.io
   orgIdentifier: default
   projectIdentifier: Harnessio
+  variables:
+    - name: APP_HOST
+      type: String
+      value: 13.201.4.222
+    - name: APP_PORT
+      type: String
+      value: "3000"
+    - name: APP_URL
+      type: String
+      value: http://13.201.4.222:3000
+    - name: HOST
+      type: String
+      value: 13.201.4.222
+    - name: SERVER_HOST
+      type: String
+      value: 13.201.4.222
   properties:
     ci:
       codebase:
@@ -47,6 +63,10 @@ pipeline:
                     repo: hello/world
                     tags:
                       - latest
+                    buildArgs:
+                      HOST: 0.0.0.0
+                      PORT: "3000"
+                      APP_HOST: 13.201.4.222
               - step:
                   identifier: ssh_deploy
                   name: Deploy via SSH
@@ -78,40 +98,31 @@ pipeline:
                       fi
                       ENDSSH
               - step:
-                  identifier: health_check
-                  name: Application Health Check
+                  identifier: debug_connections
+                  name: Debug Connection Attempts
                   type: Run
                   spec:
                     shell: Bash
-                    envVariables:
-                      APP_HOST: 13.201.4.222
-                      APP_PORT: "3000"
-                      APP_URL: http://13.201.4.222:3000
                     command: |-
-                      echo "Performing health check on deployed application..."
-                      # Wait a bit more for app to fully start
-                      sleep 15
+                      echo "=== DEBUGGING CONNECTION ISSUE ==="
+                      echo "Pipeline variables:"
+                      echo "APP_HOST: ${APP_HOST}"
+                      echo "APP_URL: ${APP_URL}"
+                      echo "HOST: ${HOST}"
 
-                      # Try to reach the application
-                      for i in {1..5}; do
-                        if curl -f -m 10 http://13.201.4.222:3000/health; then
-                          echo "✅ Health check passed - Application is accessible"
-                          exit 0
-                        elif curl -f -m 10 http://13.201.4.222:3000/; then
-                          echo "✅ Application root endpoint is accessible"
-                          exit 0
-                        else
-                          echo "⏳ Attempt $i/5 - Waiting for application to respond..."
-                          sleep 10
-                        fi
-                      done
+                      echo "=== Environment variables ==="
+                      env | grep -i host
+                      env | grep -i url
+                      env | grep -i port
 
-                      echo "❌ Health check failed - Application not accessible"
-                      echo "Please check:"
-                      echo "1. EC2 Security Group allows port 3000"
-                      echo "2. Application binds to 0.0.0.0:3000 (not localhost:3000)"
-                      echo "3. Docker container is running properly"
-                      exit 1
+                      echo "=== Testing connectivity ==="
+                      ping -c 2 13.201.4.222
+
+                      echo "=== Checking what's listening on EC2 ==="
+                      ssh -o StrictHostKeyChecking=no -i key1.pem ubuntu@13.201.4.222 'netstat -tuln | grep 3000'
+
+                      echo "=== Testing external access ==="
+                      curl -v --connect-timeout 10 http://13.201.4.222:3000/ || echo "External connection failed"
           platform:
             arch: Amd64
             os: Linux
