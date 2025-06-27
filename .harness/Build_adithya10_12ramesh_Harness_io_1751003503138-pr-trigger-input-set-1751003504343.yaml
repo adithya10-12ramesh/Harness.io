@@ -1,0 +1,14 @@
+inputSet:
+  name: Build_adithya10_12ramesh_Harness_io_1751003503138-pr-trigger-input-set
+  identifier: Build_adithya10_12ramesh_Harness_io_1751003503138prtriggerinputset
+  orgIdentifier: default
+  projectIdentifier: Harnessio
+  pipeline:
+    identifier: Build_adithya10_12ramesh_Harness_io_1751003503138
+    properties:
+      ci:
+        codebase:
+          build:
+            type: PR
+            spec:
+              number: <+trigger.prNumber>
