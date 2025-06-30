@@ -67,7 +67,7 @@ pipeline:
             serviceRef: tictactoe_service
             serviceInputs: <+input>
           environment:
-            environmentRef: production
+            environmentRef: production_env
             deployToAll: false
             environmentInputs: <+input>
             serviceOverrideInputs: <+input>
