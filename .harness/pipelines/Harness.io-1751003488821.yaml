@@ -65,14 +65,24 @@ pipeline:
           deploymentType: Ssh
           service:
             serviceRef: tictactoe_service
-            serviceInputs: <+input>
+            serviceInputs:
+              serviceDefinition:
+                type: Ssh
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: <+input>
+                      sources: <+input>
           environment:
             environmentRef: production_env
             deployToAll: false
-            environmentInputs: <+input>
-            serviceOverrideInputs: <+input>
             infrastructureDefinitions:
               - identifier: ssh_infra
+                inputs:
+                  identifier: ssh_infra
+                  type: SshWinRmAws
+                  spec:
+                    targetedHosts: <+input>
           execution:
             steps:
               - step:
