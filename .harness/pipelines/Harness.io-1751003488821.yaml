@@ -13,19 +13,15 @@ pipeline:
   variables:
     - name: AWS_REGION
       type: String
-      description: AWS Region
       value: ap-south-1
     - name: ECR_REPO_URI
       type: String
-      description: ECR Repository URI
       value: <+secrets.getValue("ecr_repo_uri")>
     - name: PUBLIC_KEY
       type: String
-      description: Public SSH Key
       value: <+secrets.getValue("public_ssh_key")>
     - name: EC2_PUBLIC_IP
       type: String
-      description: EC2 Instance IP
       value: 13.201.4.222
   stages:
     - stage:
@@ -122,7 +118,7 @@ pipeline:
                           docker stop tic-tac-toe-app || true
                           docker rm tic-tac-toe-app || true
 
-                          docker run -d --name tic-tac-toe-app -p 80:3000 <+pipeline.variables.ECR_REPO_URI>:latest
+                          docker run -d --name tic-tac-toe-app -p 3000:5000 <+pipeline.variables.ECR_REPO_URI>:latest
                   timeout: 15m
               - step:
                   type: ShellScript
@@ -134,7 +130,8 @@ pipeline:
                       type: Inline
                       spec:
                         script: |
-                          echo "Verifying app at http://<+pipeline.variables.EC2_PUBLIC_IP>:3000"
+                          echo "Checking if app is up..."
+                          sleep 10
                           curl --fail http://<+pipeline.variables.EC2_PUBLIC_IP>:3000 || exit 1
                   timeout: 2m
             rollbackSteps:
