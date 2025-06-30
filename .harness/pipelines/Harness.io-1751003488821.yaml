@@ -22,8 +22,9 @@ pipeline:
             os: Linux
             arch: Amd64
           runtime:
-            type: Cloud
-            spec: {}
+            type: Docker
+            spec:
+              connectorRef: <+input>
           execution:
             steps:
               - step:
@@ -34,9 +35,9 @@ pipeline:
                     shell: Sh
                     command: |
                       echo "Building Docker image..."
-                      docker build -t tic-tac-toe:latest .  # <-- Build Docker image
-                      docker tag tic-tac-toe:latest <+secrets.getValue("ecr_repo_uri")>:latest  # <-- Tag with latest
-                      docker tag tic-tac-toe:latest <+secrets.getValue("ecr_repo_uri")>:<+pipeline.sequenceId>  # <-- Tag with pipeline ID
+                      docker build -t tic-tac-toe:latest .
+                      docker tag tic-tac-toe:latest <+secrets.getValue("ecr_repo_uri")>:latest
+                      docker tag tic-tac-toe:latest <+secrets.getValue("ecr_repo_uri")>:<+pipeline.sequenceId>
               - step:
                   type: Run
                   name: Login to ECR
@@ -44,7 +45,6 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      # <-- Authenticate Docker to AWS ECR
                       aws ecr get-login-password --region <+pipeline.variables.AWS_REGION> \
                       | docker login --username AWS --password-stdin <+pipeline.variables.ECR_REPO_URI>
               - step:
@@ -54,7 +54,6 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      # <-- Push both tags to ECR
                       docker push <+secrets.getValue("ecr_repo_uri")>:latest
                       docker push <+secrets.getValue("ecr_repo_uri")>:<+pipeline.sequenceId>
     - stage:
@@ -86,18 +85,18 @@ pipeline:
                       type: Inline
                       spec:
                         script: |
-                          # <-- Authenticate Docker to ECR
+                          # Login to AWS ECR
                           aws ecr get-login-password --region <+pipeline.variables.AWS_REGION> \
                           | docker login --username AWS --password-stdin <+pipeline.variables.ECR_REPO_URI>
 
-                          # <-- Pull latest Docker image
+                          # Pull latest image
                           docker pull <+pipeline.variables.ECR_REPO_URI>:latest
 
-                          # <-- Stop and remove existing container if any
+                          # Stop and remove running container
                           docker stop tic-tac-toe-app || true
                           docker rm tic-tac-toe-app || true
 
-                          # <-- Run new container
+                          # Run container
                           docker run -d --name tic-tac-toe-app -p 80:3000 <+pipeline.variables.ECR_REPO_URI>:latest
                   timeout: 15m
             rollbackSteps:
@@ -112,7 +111,7 @@ pipeline:
                       spec:
                         script: |
                           echo "Rolling back to previous version..."
-                          # <-- Your rollback commands go here
+                          # Rollback logic goes here
                   timeout: 10m
         failureStrategies:
           - onFailure:
