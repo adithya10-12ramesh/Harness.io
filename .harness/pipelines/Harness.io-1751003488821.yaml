@@ -24,7 +24,7 @@ pipeline:
           runtime:
             type: Docker
             spec:
-              connectorRef: <+input>
+              connectorRef: docker-delegate
           execution:
             steps:
               - step:
