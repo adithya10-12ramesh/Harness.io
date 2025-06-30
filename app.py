@@ -1,3 +1,4 @@
+import datetime
 from flask import Flask, render_template, request, jsonify
 import json
 
@@ -71,5 +72,12 @@ def reset_game():
     }
     return jsonify(game_state)
 
+@app.route('/health')
+def health():
+    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
+    import os
+    host = os.environ.get('HOST', '0.0.0.0')
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host=host, port=port, debug=False)
