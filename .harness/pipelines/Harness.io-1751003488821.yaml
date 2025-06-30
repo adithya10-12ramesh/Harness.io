@@ -71,7 +71,7 @@ pipeline:
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: <+input>
+                      primaryArtifactRef: ecr_tictactoe_app
                       sources: <+input>
           environment:
             environmentRef: production_env
