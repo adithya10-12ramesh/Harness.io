@@ -64,7 +64,7 @@ pipeline:
         spec:
           deploymentType: Ssh
           service:
-            serviceRef: tic-tac-toe_service
+            serviceRef: tictactoe_service
             serviceInputs: <+input>
           environment:
             environmentRef: production
