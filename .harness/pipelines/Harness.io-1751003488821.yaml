@@ -1,0 +1,175 @@
+pipeline:
+  name: Harness.io_Build
+  identifier: Build_adithya10_12ramesh_Harness_io_1751003503138
+  projectIdentifier: Harnessio
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github_OAuth_1750330006102
+        repoName: adithya10-12ramesh/Harness.io
+        build: <+input>
+  stages:
+    - stage:
+        name: Build and Push
+        identifier: Build_and_Push
+        description: Build Docker image and push to ECR
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Build Docker Image
+                  identifier: Build_Docker_Image
+                  spec:
+                    shell: Sh
+                    command: |
+                      echo "Building Docker image..."
+                      docker build -t tic-tac-toe:latest .                              # CHANGE: Replace 'tic-tac-toe' with your app name
+                      docker tag tic-tac-toe:latest  <+secrets.getValue("ecr_repo_uri")>:latest
+                      docker tag tic-tac-toe:latest  <+secrets.getValue("ecr_repo_uri")>:<+pipeline.sequenceId>
+              - step:
+                  type: Run
+                  name: Login to ECR
+                  identifier: Login_to_ECR
+                  spec:
+                    shell: Sh
+                    command: |
+                      aws ecr get-login-password --region <+pipeline.variables.AWS_REGION> | docker login --username AWS --password-stdin <+pipeline.variables.ECR_REPO_URI>
+              - step:
+                  type: Run
+                  name: Push to ECR
+                  identifier: Push_to_ECR
+                  spec:
+                    shell: Sh
+                    command: |
+                      docker push value: <+secrets.getValue("ecr_repo_uri")>:latest
+                      docker push value: <+secrets.getValue("ecr_repo_uri")>:<+pipeline.sequenceId>
+    - stage:
+        name: Deploy Infrastructure
+        identifier: Deploy_Infrastructure
+        description: Deploy AWS infrastructure using Terraform
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: TerraformPlan
+                  name: Terraform Plan
+                  identifier: terraform_plan
+                  spec:
+                    configuration:
+                      command: Apply
+                      configFiles:
+                        store:
+                          spec:
+                            connectorRef: account.Github_OAuth_1750330006102
+                            gitFetchType: Branch
+                            branch: main
+                            folderPath: terraform/
+                          type: Git
+                      secretManagerRef: <+input>
+                      varFiles:
+                        - varFile:
+                            identifier: terraform_vars
+                            spec:
+                              content: |
+                                aws_region = "<+pipeline.variables.AWS_REGION>"
+                                project_name = Harness.io                                      # CHANGE: Replace with your project name
+                                public_key = "<+pipeline.variables.PUBLIC_KEY>"
+                            type: Inline
+                    provisionerIdentifier: terraform_provisioner
+                  timeout: 10m
+              - step:
+                  type: TerraformApply
+                  name: Terraform Apply
+                  identifier: terraform_apply
+                  spec:
+                    configuration:
+                      type: InheritFromPlan
+                    provisionerIdentifier: terraform_provisioner
+                  timeout: 10m
+    - stage:
+        name: Deploy Application
+        identifier: Deploy_Application
+        description: Deploy application to EC2 instances
+        type: Deployment
+        spec:
+          deploymentType: Ssh
+          service:
+            serviceRef: tic-tac-toe_service
+            serviceInputs: <+input>
+          environment:
+            environmentRef: production
+            deployToAll: false
+            environmentInputs: <+input>
+            serviceOverrideInputs: <+input>
+            infrastructureDefinitions:
+              - identifier: ssh_infra
+          execution:
+            steps:
+              - step:
+                  type: ShellScript
+                  name: Deploy to EC2
+                  identifier: deploy_to_ec2
+                  spec:
+                    shell: Bash
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          # Login to ECR and pull latest image
+                          aws ecr get-login-password --region <+pipeline.variables.AWS_REGION> | docker login --username AWS --password-stdin <+pipeline.variables.ECR_REPO_URI>
+
+                          # Pull and run the latest Docker image
+                          docker pull <+pipeline.variables.ECR_REPO_URI>:latest
+
+                          # Stop existing container if running
+                          docker stop tic-tac-toe-app || true
+                          docker rm tic-tac-toe-app || true
+
+                          # Run new container
+                          docker run -d --name tic-tac-toe-app -p 80:3000 <+pipeline.variables.ECR_REPO_URI>:latest    # CHANGE: Adjust port mapping as needed
+                  timeout: 15m
+            rollbackSteps:
+              - step:
+                  type: ShellScript
+                  name: Rollback Deployment
+                  identifier: rollback_deployment
+                  spec:
+                    shell: Bash
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          echo "Rolling back to previous version..."
+                          # Add your rollback logic here
+                  timeout: 10m
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
+  variables:
+    - name: AWS_REGION
+      type: String
+      description: AWS Region
+      value: ap-south-1
+    - name: ECR_REPO_URI
+      type: String
+      description: ECR Repository URI
+      value: <+secrets.getValue("ecr_repo_uri")>
+    - name: PUBLIC_KEY
+      type: String
+      description: Public SSH Key
+      value: <+secrets.getValue("public_ssh_key")>
