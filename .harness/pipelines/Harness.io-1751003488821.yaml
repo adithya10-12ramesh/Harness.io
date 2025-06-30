@@ -1,5 +1,5 @@
 pipeline:
-  name: Harness.io_Build
+  name: Build Harness.io
   identifier: Build_adithya10_12ramesh_Harness_io_1751003503138
   projectIdentifier: Harnessio
   orgIdentifier: default
