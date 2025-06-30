@@ -10,11 +10,27 @@ pipeline:
         connectorRef: account.Github_OAuth_1750330006102
         repoName: adithya10-12ramesh/Harness.io
         build: <+input>
+  variables:
+    - name: AWS_REGION
+      type: String
+      description: AWS Region
+      value: ap-south-1
+    - name: ECR_REPO_URI
+      type: String
+      description: ECR Repository URI
+      value: <+secrets.getValue("ecr_repo_uri")>
+    - name: PUBLIC_KEY
+      type: String
+      description: Public SSH Key
+      value: <+secrets.getValue("public_ssh_key")>
+    - name: EC2_PUBLIC_IP
+      type: String
+      description: EC2 Instance IP
+      value: 13.201.4.222
   stages:
     - stage:
         name: Build and Push
         identifier: Build_and_Push
-        description: Build Docker image and push to ECR
         type: CI
         spec:
           cloneCodebase: true
@@ -59,7 +75,6 @@ pipeline:
     - stage:
         name: Deploy Application
         identifier: Deploy_Application
-        description: Deploy application to EC2 instances
         type: Deployment
         spec:
           deploymentType: Ssh
@@ -86,7 +101,7 @@ pipeline:
                   identifier: ssh_infra
                   type: SshWinRmAws
                   spec:
-                    targetedHosts: <+input>
+                    targetedHosts: <+pipeline.variables.EC2_PUBLIC_IP>
           execution:
             steps:
               - step:
@@ -99,33 +114,24 @@ pipeline:
                       type: Inline
                       spec:
                         script: |
-                          echo "Logging into ECR..."
+                          # Login to AWS ECR
                           aws ecr get-login-password --region <+pipeline.variables.AWS_REGION> \
                           | docker login --username AWS --password-stdin <+pipeline.variables.ECR_REPO_URI>
 
-                          echo "Pulling latest image..."
+                          # Pull latest image
                           docker pull <+pipeline.variables.ECR_REPO_URI>:latest
 
-                          echo "Stopping and removing existing container..."
+                          # Stop and remove running container
                           docker stop tic-tac-toe-app || true
                           docker rm tic-tac-toe-app || true
 
-                          echo "Running new container..."
+                          # Run container
                           docker run -d --name tic-tac-toe-app -p 80:3000 <+pipeline.variables.ECR_REPO_URI>:latest
+
+                          # Optional: Check if app is reachable
+                          sleep 10
+                          curl http://<+pipeline.variables.EC2_PUBLIC_IP>:3000 || echo "App not reachable"
                   timeout: 15m
-              - step:
-                  type: ShellScript
-                  name: Verify App
-                  identifier: verify_app
-                  spec:
-                    shell: Bash
-                    source:
-                      type: Inline
-                      spec:
-                        script: |
-                          echo "Verifying application is reachable..."
-                          curl --fail http://<+pipeline.variables.EC2_PUBLIC_IP>:3000 || exit 1
-                  timeout: 2m
             rollbackSteps:
               - step:
                   type: ShellScript
@@ -138,7 +144,6 @@ pipeline:
                       spec:
                         script: |
                           echo "Rolling back to previous version..."
-                          # Add rollback logic here if needed
                   timeout: 10m
         failureStrategies:
           - onFailure:
@@ -146,20 +151,3 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
-  variables:
-    - name: AWS_REGION
-      type: String
-      description: AWS Region
-      value: ap-south-1
-    - name: ECR_REPO_URI
-      type: String
-      description: ECR Repository URI
-      value: <+secrets.getValue("ecr_repo_uri")>
-    - name: PUBLIC_KEY
-      type: String
-      description: Public SSH Key
-      value: <+secrets.getValue("public_ssh_key")>
-    - name: EC2_PUBLIC_IP
-      type: String
-      description: Public IP of EC2
-      value: 13.201.4.222
