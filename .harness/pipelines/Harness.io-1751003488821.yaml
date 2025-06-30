@@ -72,7 +72,11 @@ pipeline:
                   artifacts:
                     primary:
                       primaryArtifactRef: ecr_tictactoe_app
-                      sources: <+input>
+                      sources:
+                        - identifier: ecr_tictactoe_app_artifact
+                          type: Ecr
+                          spec:
+                            tag: <+input>
           environment:
             environmentRef: production_env
             deployToAll: false
