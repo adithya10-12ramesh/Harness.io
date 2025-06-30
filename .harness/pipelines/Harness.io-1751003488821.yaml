@@ -114,24 +114,33 @@ pipeline:
                       type: Inline
                       spec:
                         script: |
-                          # Login to AWS ECR
                           aws ecr get-login-password --region <+pipeline.variables.AWS_REGION> \
                           | docker login --username AWS --password-stdin <+pipeline.variables.ECR_REPO_URI>
 
-                          # Pull latest image
                           docker pull <+pipeline.variables.ECR_REPO_URI>:latest
 
-                          # Stop and remove running container
                           docker stop tic-tac-toe-app || true
                           docker rm tic-tac-toe-app || true
 
-                          # Run container
                           docker run -d --name tic-tac-toe-app -p 80:3000 <+pipeline.variables.ECR_REPO_URI>:latest
-
-                          # Optional: Check if app is reachable
-                          sleep 10
-                          curl http://<+pipeline.variables.EC2_PUBLIC_IP>:3000 || echo "App not reachable"
                   timeout: 15m
+              - step:
+                  type: ShellScript
+                  name: Verify App Health
+                  identifier: verify_app_health
+                  spec:
+                    shell: Bash
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          echo "Checking app health at http://<+pipeline.variables.EC2_PUBLIC_IP>:3000"
+                          for i in {1..5}; do
+                            curl -s --connect-timeout 5 http://<+pipeline.variables.EC2_PUBLIC_IP>:3000 && break
+                            echo "Retrying in 5s..."
+                            sleep 5
+                          done
+                  timeout: 1m
             rollbackSteps:
               - step:
                   type: ShellScript
