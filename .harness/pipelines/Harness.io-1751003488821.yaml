@@ -93,6 +93,11 @@ pipeline:
             deployToAll: false
             infrastructureDefinitions:
               - identifier: ssh_infra
+                inputs:
+                  identifier: ssh_infra
+                  type: SshWinRmAws
+                  spec:
+                    targetedHosts: <+input>
           execution:
             steps:
               - step:
