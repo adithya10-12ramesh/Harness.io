@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tic-tac-toe-deployment
+  labels:
+    app: tic-tac-toe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tic-tac-toe
+  template:
+    metadata:
+      labels:
+        app: tic-tac-toe
+    spec:
+      containers:
+        - name: tic-tac-toe
+          image: <your-ecr-uri>:latest  # <-- Replace this
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
