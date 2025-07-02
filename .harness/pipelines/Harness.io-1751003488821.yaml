@@ -87,7 +87,7 @@ pipeline:
                         - identifier: ecr_tictactoe_app_artifact
                           type: Ecr
                           spec:
-                            tag: <+input>
+                            tag: latest
           environment:
             environmentRef: production_env
             deployToAll: false
