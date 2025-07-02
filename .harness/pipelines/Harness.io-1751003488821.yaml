@@ -22,7 +22,7 @@ pipeline:
       value: <+secrets.getValue("public_ssh_key")>
     - name: EC2_PUBLIC_IP
       type: String
-      value: 13.201.4.222
+      value: 65.0.173.1
   stages:
     - stage:
         name: Build and Push
@@ -97,7 +97,7 @@ pipeline:
                   identifier: ssh_infra
                   type: SshWinRmAws
                   spec:
-                    targetedHosts: http://13.201.4.222:3000
+                    targetedHosts: http://65.0.173.1:3000
           execution:
             steps:
               - step:
