@@ -97,7 +97,7 @@ pipeline:
                   identifier: ssh_infra
                   type: SshWinRmAws
                   spec:
-                    targetedHosts: <+input>
+                    targetedHosts: http://13.201.4.222:3000
           execution:
             steps:
               - step:
