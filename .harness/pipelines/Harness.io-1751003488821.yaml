@@ -29,7 +29,7 @@ pipeline:
         identifier: Build_and_Push
         type: CI
         spec:
-          cloneCodebase: false
+          cloneCodebase: true
           platform:
             os: Linux
             arch: Amd64
