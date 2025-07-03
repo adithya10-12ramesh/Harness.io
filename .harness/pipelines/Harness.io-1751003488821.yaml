@@ -29,14 +29,13 @@ pipeline:
         identifier: Build_and_Push
         type: CI
         spec:
-          cloneCodebase: true
+          cloneCodebase: false
           platform:
             os: Linux
             arch: Amd64
           runtime:
             type: Docker
-            spec:
-              connectorRef: docker-delegate
+            spec: {}
           execution:
             steps:
               - step:
@@ -73,8 +72,8 @@ pipeline:
                     command: |
                       docker push <+pipeline.variables.ECR_REPO_URI>:latest
                       docker push <+pipeline.variables.ECR_REPO_URI>:<+pipeline.sequenceId>
-        delegateSelectors:
-          - docker-delegate
+          delegateSelectors:
+            - docker-delegate
     - stage:
         name: Deploy Application
         identifier: Deploy_Application
