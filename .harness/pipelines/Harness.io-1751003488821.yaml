@@ -85,6 +85,8 @@ pipeline:
                       docker push <+pipeline.variables.ECR_REPO_URI>:<+pipeline.sequenceId>
           delegateSelectors:
             - docker-delegate
+        delegateSelectors:
+          - docker-delegate
     - stage:
         name: Deploy Application
         identifier: Deploy_Application
