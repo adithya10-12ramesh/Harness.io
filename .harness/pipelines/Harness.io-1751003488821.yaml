@@ -46,10 +46,15 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
+                      echo "Cleaning up to save disk space..."
+                      rm -rf /tmp/* || true
+                      apt-get clean || true
+                      df -h
+
                       echo "Building Docker image..."
                       docker build -t tic-tac-toe:latest .
-                      docker tag tic-tac-toe:latest <+secrets.getValue("ecr_repo_uri")>:latest
-                      docker tag tic-tac-toe:latest <+secrets.getValue("ecr_repo_uri")>:<+pipeline.sequenceId>
+                      docker tag tic-tac-toe:latest <+pipeline.variables.ECR_REPO_URI>:latest
+                      docker tag tic-tac-toe:latest <+pipeline.variables.ECR_REPO_URI>:<+pipeline.sequenceId>
               - step:
                   type: Run
                   name: Login to ECR
@@ -66,8 +71,8 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      docker push <+secrets.getValue("ecr_repo_uri")>:latest
-                      docker push <+secrets.getValue("ecr_repo_uri")>:<+pipeline.sequenceId>
+                      docker push <+pipeline.variables.ECR_REPO_URI>:latest
+                      docker push <+pipeline.variables.ECR_REPO_URI>:<+pipeline.sequenceId>
         delegateSelectors:
           - docker-delegate
     - stage:
