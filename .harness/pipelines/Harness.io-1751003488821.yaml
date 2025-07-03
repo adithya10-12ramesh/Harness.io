@@ -40,20 +40,31 @@ pipeline:
             steps:
               - step:
                   type: Run
+                  name: Cleanup Disk Space
+                  identifier: cleanup_disk
+                  spec:
+                    shell: Sh
+                    command: |
+                      echo "Freeing up disk space..."
+                      rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
+                      apt-get clean || true
+                      rm -rf /tmp/* || true
+                      df -h
+              - step:
+                  type: Run
                   name: Build Docker Image
                   identifier: Build_Docker_Image
                   spec:
                     shell: Sh
                     command: |
-                      echo "Cleaning up to save disk space..."
-                      rm -rf /tmp/* || true
-                      apt-get clean || true
-                      df -h
-
                       echo "Building Docker image..."
                       docker build -t tic-tac-toe:latest .
                       docker tag tic-tac-toe:latest <+pipeline.variables.ECR_REPO_URI>:latest
                       docker tag tic-tac-toe:latest <+pipeline.variables.ECR_REPO_URI>:<+pipeline.sequenceId>
+
+                      # Optional: cleanup images/layers after build
+                      docker builder prune -af || true
+                      docker image prune -af || true
               - step:
                   type: Run
                   name: Login to ECR
