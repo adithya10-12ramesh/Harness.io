@@ -68,6 +68,8 @@ pipeline:
                     command: |
                       docker push <+secrets.getValue("ecr_repo_uri")>:latest
                       docker push <+secrets.getValue("ecr_repo_uri")>:<+pipeline.sequenceId>
+        delegateSelectors:
+          - docker-delegate-runner
     - stage:
         name: Deploy Application
         identifier: Deploy_Application
