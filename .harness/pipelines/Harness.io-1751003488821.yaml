@@ -55,4 +55,4 @@ pipeline:
           delegateSelectors:
             - docker-delegate
         delegateSelectors:
-          - docker2-delegate
+          - docker3-delegate
