@@ -24,6 +24,8 @@ pipeline:
           runtime:
             type: Docker
             spec: {}
+          sharedpaths:
+            - /harness
           execution:
             steps:
               - step:
@@ -33,8 +35,8 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      echo "Creating Dockerfile..."
-                      echo 'FROM nginx:latest' > Dockerfile
+                      echo "Creating Dockerfile..." 
+                      echo 'FROM nginx:latest' > /harness/Dockerfile
               - step:
                   type: Run
                   name: Show Dockerfile
