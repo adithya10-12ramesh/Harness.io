@@ -35,6 +35,7 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
+                      mkdir -p /harness
                       echo "Creating Dockerfile..." 
                       echo 'FROM nginx:latest' > /harness/Dockerfile
               - step:
