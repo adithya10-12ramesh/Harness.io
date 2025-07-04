@@ -55,5 +55,4 @@ pipeline:
           delegateSelectors:
             - docker-delegate
         delegateSelectors:
-          - docker-delegate
-          - linux-amd64
+          - docker2-delegate
