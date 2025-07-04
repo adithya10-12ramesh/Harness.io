@@ -54,3 +54,6 @@ pipeline:
                       docker push <+pipeline.variables.ECR_REPO_URI>:latest
           delegateSelectors:
             - docker-delegate
+        delegateSelectors:
+          - docker-delegate
+          - linux-amd64
