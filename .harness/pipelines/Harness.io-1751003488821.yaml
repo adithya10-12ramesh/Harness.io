@@ -33,7 +33,15 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
+                      echo "Creating Dockerfile..."
                       echo 'FROM nginx:latest' > Dockerfile
+              - step:
+                  type: Run
+                  name: Show Dockerfile
+                  identifier: show_dockerfile
+                  spec:
+                    shell: Sh
+                    command: cat Dockerfile
               - step:
                   type: BuildAndPushDockerRegistry
                   name: Build and Push to ECR
