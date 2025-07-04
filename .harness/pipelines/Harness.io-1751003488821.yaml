@@ -51,19 +51,22 @@ pipeline:
                       rm -rf /tmp/* || true
                       df -h
               - step:
-                  type: Run
-                  name: Build Docker Image
-                  identifier: Build_Docker_Image
+                  type: BuildAndPushDockerRegistry
+                  name: Build and Push Docker Image
+                  identifier: Build_and_Push_Docker_Image
                   spec:
-                    shell: Sh
-                    command: |
-                      echo "Building Docker image..."
-                      docker build -t tic-tac-toe:latest .
-                      docker tag tic-tac-toe:latest <+pipeline.variables.ECR_REPO_URI>:latest
-                      docker tag tic-tac-toe:latest <+pipeline.variables.ECR_REPO_URI>:<+pipeline.sequenceId>
-
-                      docker builder prune -af || true
-                      docker image prune -af || true
+                    connectorRef: docker-delegate
+                    repo: <+pipeline.variables.ECR_REPO_URI>
+                    tags:
+                      - latest
+                      - <+pipeline.sequenceId>
+                    dockerfile: Dockerfile
+                    context: .
+                    optimize: true
+                    resources:
+                      limits:
+                        memory: 2Gi
+                        cpu: 1000m
               - step:
                   type: Run
                   name: Login to ECR
