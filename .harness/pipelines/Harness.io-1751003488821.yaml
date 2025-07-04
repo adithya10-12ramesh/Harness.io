@@ -87,6 +87,7 @@ pipeline:
             - docker-delegate
         delegateSelectors:
           - docker-delegate
+          - linux-amd64
     - stage:
         name: Deploy Application
         identifier: Deploy_Application
