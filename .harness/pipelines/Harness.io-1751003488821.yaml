@@ -39,7 +39,7 @@ pipeline:
                   name: Build and Push to ECR
                   identifier: build_push_nginx
                   spec:
-                    connectorRef: docker
+                    connectorRef: docker_ecr_reg
                     repo: <+pipeline.variables.ECR_REPO_URI>
                     tags:
                       - latest
