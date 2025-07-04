@@ -55,7 +55,7 @@ pipeline:
                     tags:
                       - latest
                     dockerfile: /harness/Dockerfile
-                    context: /harness
+                    context: .
                     optimize: true
                     resources:
                       limits:
