@@ -43,7 +43,7 @@ pipeline:
                   identifier: show_dockerfile
                   spec:
                     shell: Sh
-                    command: cat Dockerfile
+                    command: cat /harness/Dockerfile
               - step:
                   type: BuildAndPushDockerRegistry
                   name: Build and Push to ECR
@@ -53,8 +53,8 @@ pipeline:
                     repo: <+pipeline.variables.ECR_REPO_URI>
                     tags:
                       - latest
-                    dockerfile: Dockerfile
-                    context: .
+                    dockerfile: /harness/Dockerfile
+                    context: /harness
                     optimize: true
                     resources:
                       limits:
