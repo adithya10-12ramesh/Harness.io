@@ -1,15 +1,9 @@
 pipeline:
-  name: Build Harness.io
+  name: Build_and_Push_NGINX
   identifier: Build_adithya10_12ramesh_Harness_io_1751003503138
   projectIdentifier: Harnessio
   orgIdentifier: default
   tags: {}
-  properties:
-    ci:
-      codebase:
-        connectorRef: account.Github_OAuth_1750330006102
-        repoName: adithya10-12ramesh/Harness.io
-        build: <+input>
   variables:
     - name: AWS_REGION
       type: String
@@ -17,19 +11,13 @@ pipeline:
     - name: ECR_REPO_URI
       type: String
       value: <+secrets.getValue("ecr_repo_uri")>
-    - name: PUBLIC_KEY
-      type: String
-      value: <+secrets.getValue("public_ssh_key")>
-    - name: EC2_PUBLIC_IP
-      type: String
-      value: 65.0.173.1
   stages:
     - stage:
         name: Build and Push
         identifier: Build_and_Push
         type: CI
         spec:
-          cloneCodebase: true
+          cloneCodebase: false
           platform:
             os: Linux
             arch: Amd64
@@ -40,37 +28,17 @@ pipeline:
             steps:
               - step:
                   type: Run
-                  name: Cleanup Disk Space
-                  identifier: cleanup_disk
+                  name: Pull and Tag NGINX
+                  identifier: pull_tag_nginx
                   spec:
                     shell: Sh
                     command: |
-                      echo "Freeing up disk space..."
-                      rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
-                      apt-get clean || true
-                      rm -rf /tmp/* || true
-                      df -h
-              - step:
-                  type: BuildAndPushDockerRegistry
-                  name: Build and Push Docker Image
-                  identifier: Build_and_Push_Docker_Image
-                  spec:
-                    connectorRef: docker-delegate
-                    repo: <+pipeline.variables.ECR_REPO_URI>
-                    tags:
-                      - latest
-                      - <+pipeline.sequenceId>
-                    dockerfile: Dockerfile
-                    context: .
-                    optimize: true
-                    resources:
-                      limits:
-                        memory: 2Gi
-                        cpu: 1000m
+                      docker pull nginx:latest
+                      docker tag nginx:latest <+pipeline.variables.ECR_REPO_URI>:latest
               - step:
                   type: Run
                   name: Login to ECR
-                  identifier: Login_to_ECR
+                  identifier: login_to_ecr
                   spec:
                     shell: Sh
                     command: |
@@ -79,99 +47,10 @@ pipeline:
               - step:
                   type: Run
                   name: Push to ECR
-                  identifier: Push_to_ECR
+                  identifier: push_to_ecr
                   spec:
                     shell: Sh
                     command: |
                       docker push <+pipeline.variables.ECR_REPO_URI>:latest
-                      docker push <+pipeline.variables.ECR_REPO_URI>:<+pipeline.sequenceId>
           delegateSelectors:
             - docker-delegate
-        delegateSelectors:
-          - docker-delegate
-          - linux-amd64
-    - stage:
-        name: Deploy Application
-        identifier: Deploy_Application
-        type: Deployment
-        spec:
-          deploymentType: Ssh
-          service:
-            serviceRef: tictactoe_service
-            serviceInputs:
-              serviceDefinition:
-                type: Ssh
-                spec:
-                  artifacts:
-                    primary:
-                      primaryArtifactRef: ecr_tictactoe_app
-                      sources:
-                        - identifier: ecr_tictactoe_app_artifact
-                          type: Ecr
-                          spec:
-                            tag: latest
-          environment:
-            environmentRef: production_env
-            deployToAll: false
-            infrastructureDefinitions:
-              - identifier: ssh_infra
-                inputs:
-                  identifier: ssh_infra
-                  type: SshWinRmAws
-                  spec:
-                    targetedHosts: http://65.0.173.1:3000
-          execution:
-            steps:
-              - step:
-                  type: ShellScript
-                  name: Deploy to EC2
-                  identifier: deploy_to_ec2
-                  spec:
-                    shell: Bash
-                    source:
-                      type: Inline
-                      spec:
-                        script: |
-                          aws ecr get-login-password --region <+pipeline.variables.AWS_REGION> \
-                          | docker login --username AWS --password-stdin <+pipeline.variables.ECR_REPO_URI>
-
-                          docker pull <+pipeline.variables.ECR_REPO_URI>:latest
-
-                          docker stop tic-tac-toe-app || true
-                          docker rm tic-tac-toe-app || true
-
-                          docker run -d --name tic-tac-toe-app -p 3000:5000 <+pipeline.variables.ECR_REPO_URI>:latest
-                  timeout: 15m
-              - step:
-                  type: ShellScript
-                  name: Verify App Health
-                  identifier: verify_app_health
-                  spec:
-                    shell: Bash
-                    source:
-                      type: Inline
-                      spec:
-                        script: |
-                          echo "Checking if app is up..."
-                          sleep 10
-                          curl --fail http://127.0.0.1:3000 || exit 1
-                  timeout: 2m
-            rollbackSteps:
-              - step:
-                  type: ShellScript
-                  name: Rollback Deployment
-                  identifier: rollback_deployment
-                  spec:
-                    shell: Bash
-                    source:
-                      type: Inline
-                      spec:
-                        script: |
-                          echo "Rolling back to previous version..."
-                  timeout: 10m
-        failureStrategies:
-          - onFailure:
-              errors:
-                - AllErrors
-              action:
-                type: StageRollback
