@@ -1,5 +1,5 @@
 pipeline:
-  name: Build_and_Push_NGINX
+  name: Build and Push NGINX
   identifier: Build_adithya10_12ramesh_Harness_io_1751003503138
   projectIdentifier: Harnessio
   orgIdentifier: default
@@ -13,8 +13,8 @@ pipeline:
       value: <+secrets.getValue("ecr_repo_uri")>
   stages:
     - stage:
-        name: Build and Push
-        identifier: Build_and_Push
+        name: Push NGINX to ECR
+        identifier: push_nginx
         type: CI
         spec:
           cloneCodebase: false
@@ -28,31 +28,29 @@ pipeline:
             steps:
               - step:
                   type: Run
-                  name: Pull and Tag NGINX
-                  identifier: pull_tag_nginx
+                  name: Create Dockerfile for NGINX
+                  identifier: create_dockerfile
                   spec:
                     shell: Sh
                     command: |
-                      docker pull nginx:latest
-                      docker tag nginx:latest <+pipeline.variables.ECR_REPO_URI>:latest
+                      echo 'FROM nginx:latest' > Dockerfile
               - step:
-                  type: Run
-                  name: Login to ECR
-                  identifier: login_to_ecr
+                  type: BuildAndPushDockerRegistry
+                  name: Build and Push to ECR
+                  identifier: build_push_nginx
                   spec:
-                    shell: Sh
-                    command: |
-                      aws ecr get-login-password --region <+pipeline.variables.AWS_REGION> \
-                      | docker login --username AWS --password-stdin <+pipeline.variables.ECR_REPO_URI>
-              - step:
-                  type: Run
-                  name: Push to ECR
-                  identifier: push_to_ecr
-                  spec:
-                    shell: Sh
-                    command: |
-                      docker push <+pipeline.variables.ECR_REPO_URI>:latest
+                    connectorRef: docker-delegate
+                    repo: <+pipeline.variables.ECR_REPO_URI>
+                    tags:
+                      - latest
+                    dockerfile: Dockerfile
+                    context: .
+                    optimize: true
+                    resources:
+                      limits:
+                        memory: 2Gi
+                        cpu: 1000m
           delegateSelectors:
-            - docker-delegate
+            - docker3-delegate
         delegateSelectors:
           - docker3-delegate
