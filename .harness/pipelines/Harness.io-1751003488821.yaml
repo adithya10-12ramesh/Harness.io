@@ -62,7 +62,6 @@ pipeline:
                       docker tag tic-tac-toe:latest <+pipeline.variables.ECR_REPO_URI>:latest
                       docker tag tic-tac-toe:latest <+pipeline.variables.ECR_REPO_URI>:<+pipeline.sequenceId>
 
-                      # Optional: cleanup images/layers after build
                       docker builder prune -af || true
                       docker image prune -af || true
               - step:
