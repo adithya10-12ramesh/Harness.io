@@ -63,3 +63,5 @@ pipeline:
                         cpu: 1000m
           delegateSelectors:
             - docker3-delegate
+        delegateSelectors:
+          - docker4-delegate
