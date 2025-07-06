@@ -18,6 +18,8 @@ pipeline:
         type: CI
         spec:
           cloneCodebase: false
+          sharedPaths:
+            - /shared
           platform:
             os: Linux
             arch: Amd64
@@ -33,15 +35,15 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      echo "Creating Dockerfile..."
-                      echo 'FROM nginx:latest' > Dockerfile
+                      mkdir -p /shared
+                      echo 'FROM nginx:latest' > /shared/Dockerfile
               - step:
                   type: Run
-                  name: Docker-File
+                  name: Dockerfile
                   identifier: show_dockerfile
                   spec:
                     shell: Sh
-                    command: cat Dockerfile
+                    command: cat /shared/Dockerfile
               - step:
                   type: BuildAndPushDockerRegistry
                   name: Build and Push to ECR
@@ -51,8 +53,8 @@ pipeline:
                     repo: <+pipeline.variables.ECR_REPO_URI>
                     tags:
                       - latest
-                    dockerfile: Dockerfile
-                    context: .
+                    dockerfile: /shared/Dockerfile
+                    context: /shared
                     optimize: true
                     resources:
                       limits:
