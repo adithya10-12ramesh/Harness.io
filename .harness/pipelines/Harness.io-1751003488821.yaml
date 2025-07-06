@@ -24,8 +24,6 @@ pipeline:
           runtime:
             type: Docker
             spec: {}
-          sharedpaths:
-            - /harness
           execution:
             steps:
               - step:
@@ -35,16 +33,15 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      mkdir -p /harness
-                      echo "Creating Dockerfile..." 
-                      echo 'FROM nginx:latest' > /harness/Dockerfile
+                      echo "Creating Dockerfile..."
+                      echo 'FROM nginx:latest' > Dockerfile
               - step:
                   type: Run
-                  name: Show Dockerfile
+                  name: Docker-File
                   identifier: show_dockerfile
                   spec:
                     shell: Sh
-                    command: cat /harness/Dockerfile
+                    command: cat Dockerfile
               - step:
                   type: BuildAndPushDockerRegistry
                   name: Build and Push to ECR
@@ -54,7 +51,7 @@ pipeline:
                     repo: <+pipeline.variables.ECR_REPO_URI>
                     tags:
                       - latest
-                    dockerfile: /harness/Dockerfile
+                    dockerfile: Dockerfile
                     context: .
                     optimize: true
                     resources:
@@ -62,6 +59,4 @@ pipeline:
                         memory: 2Gi
                         cpu: 1000m
           delegateSelectors:
-            - docker3-delegate
-        delegateSelectors:
-          - docker4-delegate
+            - docker4-delegate
