@@ -85,6 +85,14 @@ pipeline:
                       type: Inline
                       spec:
                         script: |
+                          # 🔧 Ensure Docker and AWS CLI are in PATH
+                          export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
+
+                          echo "🔍 Checking tool availability..."
+                          echo "PATH: $PATH"
+                          which aws || { echo '❌ AWS CLI not found'; exit 1; }
+                          which docker || { echo '❌ Docker not found'; exit 1; }
+
                           echo "🔐 Logging into ECR..."
                           aws ecr get-login-password --region ap-south-1 \
                           | docker login --username AWS --password-stdin 680871073643.dkr.ecr.ap-south-1.amazonaws.com
