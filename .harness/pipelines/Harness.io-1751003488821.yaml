@@ -122,6 +122,11 @@ pipeline:
                           echo "🩺 Checking if NGINX is up..."
                           sleep 5
                           curl --fail http://localhost || exit 1
+          environment:
+            environmentRef: production_env
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: ssh_infra
         failureStrategies:
           - onFailure:
               errors:
