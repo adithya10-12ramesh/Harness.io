@@ -81,6 +81,7 @@ pipeline:
                   spec:
                     shell: Bash
                     onDelegate: true
+                    image: amazon/aws-cli:2.15.28
                     source:
                       type: Inline
                       spec:
