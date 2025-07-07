@@ -10,7 +10,7 @@ pipeline:
       value: ap-south-1
     - name: ECR_REPO_URI
       type: String
-      value: <+secrets.getValue("ecr_repo_uri")>
+      value: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
   properties:
     ci:
       codebase:
@@ -54,7 +54,7 @@ pipeline:
                   identifier: build_push_nginx
                   spec:
                     connectorRef: docker_ecr_reg
-                    repo: <+pipeline.variables.ECR_REPO_URI>
+                    repo: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
                     tags:
                       - latest
                     dockerfile: Dockerfile
