@@ -14,7 +14,7 @@ pipeline:
   properties:
     ci:
       codebase:
-        connectorRef: account.GitHub
+        connectorRef: GitHub
         repoName: adithya10-12ramesh/harness
         build:
           type: branch
