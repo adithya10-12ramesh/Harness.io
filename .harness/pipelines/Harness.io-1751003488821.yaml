@@ -74,14 +74,14 @@ pipeline:
         spec:
           deploymentType: Ssh
           service:
-            serviceRef: nginx_service
+            serviceRef: nginx
             serviceInputs:
               serviceDefinition:
                 type: Ssh
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: nginx_image
+                      primaryArtifactRef: nginx
                       sources:
                         - identifier: nginx_image
                           type: Ecr
@@ -132,6 +132,7 @@ pipeline:
                           echo "Waiting for NGINX to be ready..."
                           sleep 10
                           curl --fail http://localhost || exit 1
+            rollbackSteps: []
         failureStrategies:
           - onFailure:
               errors:
