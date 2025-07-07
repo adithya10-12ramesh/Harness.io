@@ -47,7 +47,7 @@ pipeline:
                       echo "=== files ==="
                       ls -la
                       echo "=== Dockerfile ==="
-                      [ -f Dockerfile ] && cat Dockerfile || echo "Dockerfile FOUND"
+                      [ -f Dockerfile ] && cat Dockerfile || echo "Dockerfile NOT FOUND"
               - step:
                   type: BuildAndPushECR
                   name: BuildAndPushECR_1
@@ -85,36 +85,14 @@ pipeline:
                       type: Inline
                       spec:
                         script: |
-                          echo "⚙️ Installing required tools..."
-
-                          apt-get update && apt-get install -y unzip curl less groff python3-pip docker.io
-
-                          echo "📥 Downloading AWS CLI..."
-                          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-
-                          echo "📦 Extracting AWS CLI..."
-                          unzip -q awscliv2.zip || { echo '❌ Failed to unzip AWS CLI'; exit 1; }
-                          ls -l aws || { echo '❌ AWS directory missing after unzip'; exit 1; }
-
-                          echo "🔧 Installing AWS CLI..."
-                          ./aws/install || { echo '❌ AWS CLI install failed'; exit 1; }
-
-                          echo "🔍 Checking tool availability..."
-                          command -v aws || { echo '❌ AWS CLI not found'; exit 1; }
-                          command -v docker || { echo '❌ Docker not found'; exit 1; }
-
-                          echo "🔐 Logging into ECR..."
                           aws ecr get-login-password --region ap-south-1 \
                           | docker login --username AWS --password-stdin 680871073643.dkr.ecr.ap-south-1.amazonaws.com
 
-                          echo "📦 Pulling latest NGINX image..."
                           docker pull 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
 
-                          echo "🧹 Cleaning up old container..."
                           docker stop nginx || true
                           docker rm nginx || true
 
-                          echo "🚀 Running latest NGINX..."
                           docker run -d --name nginx -p 80:80 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
               - step:
                   name: Health Check
