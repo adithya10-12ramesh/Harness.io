@@ -83,11 +83,10 @@ pipeline:
                     primary:
                       primaryArtifactRef: nginx_image
                       sources:
-                        - identifier: nginx_image
+                        - identifier: nginx
                           type: Ecr
                           spec:
-                            imagePath: nginx
-                            tag: latest
+                            tag: <+input>
           environment:
             environmentRef: production_env
             deployToAll: false
