@@ -1,5 +1,5 @@
 pipeline:
-  name: Build and Push NGINX
+  name: Build and Push NGINX from Git Repo
   identifier: Build_adithya10_12ramesh_Harness_io_1751003503138
   projectIdentifier: Harnessio
   orgIdentifier: default
@@ -11,15 +11,22 @@ pipeline:
     - name: ECR_REPO_URI
       type: String
       value: <+secrets.getValue("ecr_repo_uri")>
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github_OAuth_YourConnectorID
+        repoName: adithya10-12ramesh/Harness.io-nginx
+        build:
+          type: branch
+          spec:
+            branch: main
   stages:
     - stage:
-        name: Push NGINX to ECR
+        name: Clone and Push NGINX to ECR
         identifier: push_nginx
         type: CI
         spec:
-          cloneCodebase: false
-          sharedPaths:
-            - /shared
+          cloneCodebase: true
           platform:
             os: Linux
             arch: Amd64
@@ -29,22 +36,6 @@ pipeline:
           execution:
             steps:
               - step:
-                  type: Run
-                  name: Create Dockerfile for NGINX
-                  identifier: create_dockerfile
-                  spec:
-                    shell: Sh
-                    command: |
-                      mkdir -p /shared
-                      echo 'FROM nginx:latest' > /shared/Dockerfile
-              - step:
-                  type: Run
-                  name: Dockerfile
-                  identifier: show_dockerfile
-                  spec:
-                    shell: Sh
-                    command: cat /shared/Dockerfile
-              - step:
                   type: BuildAndPushDockerRegistry
                   name: Build and Push to ECR
                   identifier: build_push_nginx
@@ -53,12 +44,12 @@ pipeline:
                     repo: <+pipeline.variables.ECR_REPO_URI>
                     tags:
                       - latest
-                    dockerfile: /shared/Dockerfile
-                    context: /shared
+                    dockerfile: Dockerfile
+                    context: .
                     optimize: true
                     resources:
                       limits:
                         memory: 2Gi
                         cpu: 1000m
           delegateSelectors:
-            - docker4-delegate
+            - docker5-delegate
