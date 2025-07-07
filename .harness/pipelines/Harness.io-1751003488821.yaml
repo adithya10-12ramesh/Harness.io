@@ -96,7 +96,7 @@ pipeline:
                   identifier: ssh_infra
                   type: SshWinRmAws
                   spec:
-                    targetedHosts: 1.2.3.4
+                    targetedHosts: 65.0.173.1
           execution:
             steps:
               - step:
@@ -130,7 +130,7 @@ pipeline:
                         script: |
                           echo "Waiting for NGINX to be ready..."
                           sleep 10
-                          curl --fail http://localhost || exit 1
+                          curl --fail 65.0.173.1 || exit 1
             rollbackSteps: []
         failureStrategies:
           - onFailure:
