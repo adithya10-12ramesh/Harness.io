@@ -36,6 +36,19 @@ pipeline:
           execution:
             steps:
               - step:
+                  type: Run
+                  name: Show repo contents
+                  identifier: show_repo
+                  spec:
+                    shell: Sh
+                    command: |
+                      echo "=== working dir ==="
+                      pwd
+                      echo "=== files ==="
+                      ls -la
+                      echo "=== Dockerfile ==="
+                      [ -f Dockerfile ] && cat Dockerfile || echo "Dockerfile NOT FOUND"
+              - step:
                   type: BuildAndPushDockerRegistry
                   name: Build and Push to ECR
                   identifier: build_push_nginx
