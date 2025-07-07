@@ -15,7 +15,7 @@ pipeline:
     ci:
       codebase:
         connectorRef: GitHub
-        repoName: harness
+        repoName: adithya10-12ramesh/harness
         build:
           type: branch
           spec:
@@ -75,19 +75,6 @@ pipeline:
           deploymentType: Ssh
           service:
             serviceRef: nginx
-            serviceInputs:
-              serviceDefinition:
-                type: Ssh
-                spec:
-                  artifacts:
-                    primary:
-                      primaryArtifactRef: nginx_image
-                      sources:
-                        - identifier: nginx_image
-                          type: Ecr
-                          spec:
-                            imagePath: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
-                            tag: latest
           environment:
             environmentRef: production_env
             deployToAll: false
@@ -119,9 +106,6 @@ pipeline:
                           docker rm nginx || true
 
                           docker run -d --name nginx -p 80:80 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
-                    executionTarget: {}
-                    environmentVariables: []
-                    outputVariables: []
                   timeout: 3m
               - step:
                   type: ShellScript
@@ -135,10 +119,7 @@ pipeline:
                         script: |
                           echo "Waiting for NGINX to be ready..."
                           sleep 10
-                          curl --fail 65.0.173.1 || exit 1
-                    executionTarget: {}
-                    environmentVariables: []
-                    outputVariables: []
+                          curl --fail http://65.0.173.1 || exit 1
                   timeout: 3m
             rollbackSteps: []
         failureStrategies:
