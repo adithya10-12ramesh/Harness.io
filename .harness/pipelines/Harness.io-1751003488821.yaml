@@ -47,7 +47,7 @@ pipeline:
                       echo "=== files ==="
                       ls -la
                       echo "=== Dockerfile ==="
-                      [ -f Dockerfile ] && cat Dockerfile || echo "Dockerfile NOT FOUND"
+                      [ -f Dockerfile ] && cat Dockerfile || echo "Dockerfile FOUND"
               - step:
                   type: BuildAndPushECR
                   name: BuildAndPushECR_1
