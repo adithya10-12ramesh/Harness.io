@@ -68,39 +68,35 @@ pipeline:
               action:
                 type: StageRollback
     - stage:
-        name: Deploy to EC2
-        identifier: deploy_to_ec2
+        name: Deploy NGINX to EC2
+        identifier: deploy_nginx_ec2
         type: Custom
         spec:
           execution:
             steps:
               - step:
-                  name: Deploy Container
+                  name: Deploy Container from ECR
                   identifier: deploy_container
                   type: ShellScript
                   spec:
                     shell: Bash
-                    onDelegate: false
-                    executionTarget:
-                      host: 65.0.173.1
-                      connectorRef: ssh-ec2-key3
-                      workingDirectory: /home/ubuntu
+                    onDelegate: true
                     source:
                       type: Inline
                       spec:
                         script: |
-                          echo "🔐 Logging in to ECR..."
+                          echo "🔐 Logging into ECR..."
                           aws ecr get-login-password --region ap-south-1 \
                           | docker login --username AWS --password-stdin 680871073643.dkr.ecr.ap-south-1.amazonaws.com
 
-                          echo "📦 Pulling image from ECR..."
+                          echo "📦 Pulling latest NGINX image..."
                           docker pull 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
 
-                          echo "🛑 Stopping existing container if any..."
+                          echo "🧹 Cleaning up old container..."
                           docker stop nginx || true
                           docker rm nginx || true
 
-                          echo "🚀 Running new container..."
+                          echo "🚀 Running latest NGINX..."
                           docker run -d --name nginx -p 80:80 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
               - step:
                   name: Health Check
@@ -108,16 +104,19 @@ pipeline:
                   type: ShellScript
                   spec:
                     shell: Bash
-                    onDelegate: false
-                    executionTarget:
-                      host: 65.0.173.1
-                      connectorRef: ssh_key_connector
-                      workingDirectory: /home/ec2-user
+                    onDelegate: true
                     source:
                       type: Inline
                       spec:
                         script: |
-                          echo "⏱ Waiting for container to start..."
-                          sleep 10
-                          echo "🔍 Checking NGINX availability..."
+                          echo "🩺 Checking if NGINX is up..."
+                          sleep 5
                           curl --fail http://localhost || exit 1
+          delegateSelectors:
+            - ec2-delegate
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
