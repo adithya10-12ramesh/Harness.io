@@ -49,30 +49,15 @@ pipeline:
                       echo "=== Dockerfile ==="
                       [ -f Dockerfile ] && cat Dockerfile || echo "Dockerfile NOT FOUND"
               - step:
-                  type: Run
-                  name: Login to ECR
-                  identifier: login_ecr
+                  type: BuildAndPushECR
+                  name: BuildAndPushECR_1
+                  identifier: BuildAndPushECR_1
                   spec:
-                    shell: Sh
-                    command: |
-                      echo "Logging in to ECR..."
-                      aws ecr get-login-password --region ap-south-1 \
-                      | docker login --username AWS --password-stdin 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
-              - step:
-                  type: BuildAndPushDockerRegistry
-                  name: Build and Push to ECR
-                  identifier: build_push_nginx
-                  spec:
-                    connectorRef: docker_ecr_reg
-                    repo: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
+                    connectorRef: YOUR_AWS_CONNECTOR_ID
+                    region: ap-south-1
+                    account: "680871073643"
+                    imageName: nginx
                     tags:
                       - latest
-                    dockerfile: Dockerfile
-                    context: .
-                    optimize: true
-                    resources:
-                      limits:
-                        memory: 2Gi
-                        cpu: 1000m
           delegateSelectors:
             - docker5-delegate
