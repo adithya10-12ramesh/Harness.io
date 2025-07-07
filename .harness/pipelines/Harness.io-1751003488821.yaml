@@ -120,8 +120,6 @@ pipeline:
                           echo "🩺 Checking if NGINX is up..."
                           sleep 5
                           curl --fail http://localhost || exit 1
-          delegateSelectors:
-            - ec2-delegate
         failureStrategies:
           - onFailure:
               errors:
