@@ -70,63 +70,54 @@ pipeline:
     - stage:
         name: Deploy to EC2
         identifier: deploy_to_ec2
-        type: Deployment
+        type: Custom
         spec:
-          deploymentType: Ssh
-          service:
-            serviceRef: nginx
-          environment:
-            environmentRef: production_env
-            deployToAll: false
-            infrastructureDefinitions:
-              - identifier: ssh_infra
-                inputs:
-                  identifier: ssh_infra
-                  type: SshWinRmAws
-                  spec:
-                    targetedHosts: 65.0.173.1
           execution:
             steps:
               - step:
-                  type: ShellScript
                   name: Deploy Container
                   identifier: deploy_container
+                  type: ShellScript
                   spec:
                     shell: Bash
+                    onDelegate: false
+                    executionTarget:
+                      host: 65.0.173.1
+                      connectorRef: ssh_key_connector
+                      workingDirectory: /home/ec2-user
                     source:
                       type: Inline
                       spec:
                         script: |
+                          echo "🔐 Logging in to ECR..."
                           aws ecr get-login-password --region ap-south-1 \
                           | docker login --username AWS --password-stdin 680871073643.dkr.ecr.ap-south-1.amazonaws.com
 
+                          echo "📦 Pulling image from ECR..."
                           docker pull 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
 
+                          echo "🛑 Stopping existing container if any..."
                           docker stop nginx || true
                           docker rm nginx || true
 
+                          echo "🚀 Running new container..."
                           docker run -d --name nginx -p 80:80 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
-                  timeout: 3m
               - step:
-                  type: ShellScript
                   name: Health Check
                   identifier: health_check
+                  type: ShellScript
                   spec:
                     shell: Bash
+                    onDelegate: false
+                    executionTarget:
+                      host: 65.0.173.1
+                      connectorRef: ssh_key_connector
+                      workingDirectory: /home/ec2-user
                     source:
                       type: Inline
                       spec:
                         script: |
-                          echo "Waiting for NGINX to be ready..."
+                          echo "⏱ Waiting for container to start..."
                           sleep 10
-                          curl --fail http://65.0.173.1 || exit 1
-                  timeout: 3m
-            rollbackSteps: []
-        failureStrategies:
-          - onFailure:
-              errors:
-                - AllErrors
-              action:
-                type: StageRollback
-        delegateSelectors:
-          - docker5-delegate
+                          echo "🔍 Checking NGINX availability..."
+                          curl --fail http://localhost || exit 1
