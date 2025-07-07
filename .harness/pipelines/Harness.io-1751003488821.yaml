@@ -74,7 +74,7 @@ pipeline:
         spec:
           deploymentType: Ssh
           service:
-            serviceRef: nginx
+            serviceRef: nginx_service
             serviceInputs:
               serviceDefinition:
                 type: Ssh
@@ -83,9 +83,10 @@ pipeline:
                     primary:
                       primaryArtifactRef: nginx_image
                       sources:
-                        - identifier: nginx
+                        - identifier: nginx_image
                           type: Ecr
                           spec:
+                            imagePath: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
                             tag: latest
           environment:
             environmentRef: production_env
