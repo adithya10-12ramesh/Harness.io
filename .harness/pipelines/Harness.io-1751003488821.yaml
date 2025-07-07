@@ -121,7 +121,7 @@ pipeline:
                         script: |
                           echo "🩺 Checking if NGINX is up..."
                           sleep 5
-                          curl --fail http://localhost || exit 1
+                          curl --fail http://localhost:80 || exit 1
           environment:
             environmentRef: production_env
             deployToAll: false
