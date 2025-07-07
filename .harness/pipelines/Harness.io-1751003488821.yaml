@@ -56,7 +56,7 @@ pipeline:
                     connectorRef: aws_connector
                     region: ap-south-1
                     account: "680871073643"
-                    imageName: harness/nginx
+                    imageName: nginx
                     tags:
                       - latest
           delegateSelectors:
@@ -86,7 +86,6 @@ pipeline:
                         - identifier: nginx
                           type: Ecr
                           spec:
-                            imagePath: harness/nginx
                             tag: latest
           environment:
             environmentRef: production_env
