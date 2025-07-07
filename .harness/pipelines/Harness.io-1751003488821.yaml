@@ -83,11 +83,10 @@ pipeline:
                     primary:
                       primaryArtifactRef: nginx
                       sources:
-                        - identifier: nginx_image
+                        - identifier: nginx
                           type: Ecr
                           spec:
-                            imagePath: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
-                            tag: latest
+                            tag: <+input>
           environment:
             environmentRef: production_env
             deployToAll: false
