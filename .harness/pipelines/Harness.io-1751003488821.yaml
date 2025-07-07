@@ -119,6 +119,10 @@ pipeline:
                           docker rm nginx || true
 
                           docker run -d --name nginx -p 80:80 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
+                    executionTarget: {}
+                    environmentVariables: []
+                    outputVariables: []
+                  timeout: 3m
               - step:
                   type: ShellScript
                   name: Health Check
@@ -132,6 +136,10 @@ pipeline:
                           echo "Waiting for NGINX to be ready..."
                           sleep 10
                           curl --fail 65.0.173.1 || exit 1
+                    executionTarget: {}
+                    environmentVariables: []
+                    outputVariables: []
+                  timeout: 3m
             rollbackSteps: []
         failureStrategies:
           - onFailure:
@@ -139,3 +147,5 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
+        delegateSelectors:
+          - docker5-delegate
