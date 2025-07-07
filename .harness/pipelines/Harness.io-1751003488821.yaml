@@ -83,8 +83,8 @@ pipeline:
                     onDelegate: false
                     executionTarget:
                       host: 65.0.173.1
-                      connectorRef: ssh_key_connector
-                      workingDirectory: /home/ec2-user
+                      connectorRef: ssh-ec2-key3
+                      workingDirectory: /home/ubuntu
                     source:
                       type: Inline
                       spec:
