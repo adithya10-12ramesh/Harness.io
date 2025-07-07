@@ -74,7 +74,7 @@ pipeline:
         spec:
           deploymentType: Ssh
           service:
-            serviceRef: nginx_service
+            serviceRef: nginx
             serviceInputs:
               serviceDefinition:
                 type: Ssh
