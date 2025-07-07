@@ -86,15 +86,28 @@ pipeline:
                       type: Inline
                       spec:
                         script: |
-                          aws ecr get-login-password --region ap-south-1 \
-                          | docker login --username AWS --password-stdin 680871073643.dkr.ecr.ap-south-1.amazonaws.com
+                          AWS_REGION="ap-south-1"
+                          ECR_REPO="680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx"
 
-                          docker pull 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
+                          echo "🔧 Installing Docker..."
+                          sudo apt update -y
+                          sudo apt install -y docker.io
+                          sudo systemctl start docker
+                          sudo systemctl enable docker
 
-                          docker stop nginx || true
-                          docker rm nginx || true
+                          echo "🔐 Logging into ECR..."
+                          aws ecr get-login-password --region "$AWS_REGION" \
+                            | sudo docker login --username AWS --password-stdin "$ECR_REPO"
 
-                          docker run -d --name nginx -p 80:80 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
+                          echo "📦 Pulling image from ECR..."
+                          sudo docker pull "$ECR_REPO:latest"
+
+                          echo "🧹 Cleaning old container..."
+                          sudo docker stop nginx || true
+                          sudo docker rm nginx || true
+
+                          echo "🚀 Running NGINX container..."
+                          sudo docker run -d --name nginx -p 80:80 "$ECR_REPO:latest"
               - step:
                   name: Health Check
                   identifier: health_check
