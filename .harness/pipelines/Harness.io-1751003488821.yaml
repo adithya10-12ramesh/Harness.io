@@ -53,7 +53,7 @@ pipeline:
                   name: BuildAndPushECR_1
                   identifier: BuildAndPushECR_1
                   spec:
-                    connectorRef: aws_connector
+                    connectorRef: YOUR_AWS_CONNECTOR_ID
                     region: ap-south-1
                     account: "680871073643"
                     imageName: nginx
@@ -61,3 +61,80 @@ pipeline:
                       - latest
           delegateSelectors:
             - docker5-delegate
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
+    - stage:
+        name: Deploy to EC2
+        identifier: deploy_to_ec2
+        type: Deployment
+        spec:
+          deploymentType: Ssh
+          service:
+            serviceRef: nginx_service
+            serviceInputs:
+              serviceDefinition:
+                type: Ssh
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: nginx_image
+                      sources:
+                        - identifier: nginx_image
+                          type: Ecr
+                          spec:
+                            imagePath: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
+                            tag: latest
+          environment:
+            environmentRef: production_env
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: ssh_infra
+                inputs:
+                  identifier: ssh_infra
+                  type: SshWinRmAws
+                  spec:
+                    targetedHosts: 1.2.3.4
+          execution:
+            steps:
+              - step:
+                  type: ShellScript
+                  name: Deploy Container
+                  identifier: deploy_container
+                  spec:
+                    shell: Bash
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          aws ecr get-login-password --region ap-south-1 \
+                          | docker login --username AWS --password-stdin 680871073643.dkr.ecr.ap-south-1.amazonaws.com
+
+                          docker pull 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
+
+                          docker stop nginx || true
+                          docker rm nginx || true
+
+                          docker run -d --name nginx -p 80:80 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest
+              - step:
+                  type: ShellScript
+                  name: Health Check
+                  identifier: health_check
+                  spec:
+                    shell: Bash
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          echo "Waiting for NGINX to be ready..."
+                          sleep 10
+                          curl --fail http://localhost || exit 1
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
