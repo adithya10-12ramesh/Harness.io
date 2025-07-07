@@ -85,13 +85,16 @@ pipeline:
                       type: Inline
                       spec:
                         script: |
-                          # 🔧 Ensure Docker and AWS CLI are in PATH
-                          export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
+                          echo "⚙️ Installing required tools..."
+
+                          apt-get update && apt-get install -y unzip curl less groff python3-pip docker.io
+                          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                          unzip awscliv2.zip
+                          ./aws/install
 
                           echo "🔍 Checking tool availability..."
-                          echo "PATH: $PATH"
-                          which aws || { echo '❌ AWS CLI not found'; exit 1; }
-                          which docker || { echo '❌ Docker not found'; exit 1; }
+                          command -v aws || { echo '❌ AWS CLI not found'; exit 1; }
+                          command -v docker || { echo '❌ Docker not found'; exit 1; }
 
                           echo "🔐 Logging into ECR..."
                           aws ecr get-login-password --region ap-south-1 \
