@@ -128,3 +128,5 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
+        delegateSelectors:
+          - docker5-delegate
