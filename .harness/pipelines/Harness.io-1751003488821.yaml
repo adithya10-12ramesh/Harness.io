@@ -86,7 +86,7 @@ pipeline:
                         - identifier: nginx
                           type: Ecr
                           spec:
-                            tag: <+input>
+                            tag: latest
           environment:
             environmentRef: production_env
             deployToAll: false
