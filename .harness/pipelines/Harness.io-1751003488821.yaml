@@ -53,7 +53,7 @@ pipeline:
                   name: BuildAndPushECR_1
                   identifier: BuildAndPushECR_1
                   spec:
-                    connectorRef: YOUR_AWS_CONNECTOR_ID
+                    connectorRef: aws_connector
                     region: ap-south-1
                     account: "680871073643"
                     imageName: nginx
