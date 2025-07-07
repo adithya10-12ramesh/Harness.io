@@ -15,7 +15,7 @@ pipeline:
     ci:
       codebase:
         connectorRef: GitHub
-        repoName: adithya10-12ramesh/Harness.io-nginx
+        repoName: adithya10-12ramesh/harness
         build:
           type: branch
           spec:
