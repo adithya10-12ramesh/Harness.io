@@ -90,24 +90,24 @@ pipeline:
                           ECR_REPO="680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx"
 
                           echo "🔧 Installing Docker..."
-                          sudo apt update -y
-                          sudo apt install -y docker.io
-                          sudo systemctl start docker
-                          sudo systemctl enable docker
+                           apt update -y
+                           apt install -y docker.io
+                           systemctl start docker
+                           systemctl enable docker
 
                           echo "🔐 Logging into ECR..."
                           aws ecr get-login-password --region "$AWS_REGION" \
-                            | sudo docker login --username AWS --password-stdin "$ECR_REPO"
+                            |  docker login --username AWS --password-stdin "$ECR_REPO"
 
                           echo "📦 Pulling image from ECR..."
-                          sudo docker pull "$ECR_REPO:latest"
+                           docker pull "$ECR_REPO:latest"
 
                           echo "🧹 Cleaning old container..."
-                          sudo docker stop nginx || true
-                          sudo docker rm nginx || true
+                           docker stop nginx || true
+                           docker rm nginx || true
 
                           echo "🚀 Running NGINX container..."
-                          sudo docker run -d --name nginx -p 80:80 "$ECR_REPO:latest"
+                           docker run -d --name nginx -p 80:80 "$ECR_REPO:latest"
               - step:
                   name: Health Check
                   identifier: health_check
