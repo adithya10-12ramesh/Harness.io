@@ -81,11 +81,12 @@ pipeline:
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: nginx
+                      primaryArtifactRef: nginx_image
                       sources:
-                        - identifier: nginx
+                        - identifier: nginx_image
                           type: Ecr
                           spec:
+                            imagePath: nginx
                             tag: latest
           environment:
             environmentRef: production_env
