@@ -74,7 +74,7 @@ pipeline:
         spec:
           deploymentType: ECS
           service:
-            serviceRef: nginxecsservice
+            serviceRef: nginx2
             serviceInputs:
               serviceDefinition:
                 type: ECS
