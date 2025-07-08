@@ -74,16 +74,16 @@ pipeline:
         spec:
           deploymentType: ECS
           service:
-            serviceRef: nginx-ecs
+            serviceRef: nginx-ecs-service
             serviceInputs:
               serviceDefinition:
                 type: ECS
                 spec:
                   artifacts:
                     primary:
-                      primaryArtifactRef: nginx_image
+                      primaryArtifactRef: nginx-ecr
                       sources:
-                        - identifier: nginx_image
+                        - identifier: nginxecr
                           type: Ecr
                           spec:
                             imagePath: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
