@@ -123,10 +123,10 @@ pipeline:
                           sleep 5
                           curl --fail http://localhost:80 || exit 1
           environment:
-            environmentRef: production_env
+            environmentRef: production
             deployToAll: false
             infrastructureDefinitions:
-              - identifier: ssh_infra
+              - identifier: nginxecs
         failureStrategies:
           - onFailure:
               errors:
