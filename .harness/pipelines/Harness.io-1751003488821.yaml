@@ -119,6 +119,7 @@ pipeline:
                             echo "❌ No running task found."
                             exit 1
                           fi
+            rollbackSteps: []
           rollbackSteps: []
         failureStrategies:
           - onFailure:
