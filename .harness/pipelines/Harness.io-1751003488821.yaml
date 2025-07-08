@@ -86,7 +86,9 @@ pipeline:
                         - identifier: nginxecr
                           type: Ecr
                           spec:
-                            imagePath: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
+                            connectorRef: aws_connector
+                            region: ap-south-1
+                            imagePath: nginx
                             tag: latest
           environment:
             environmentRef: production
