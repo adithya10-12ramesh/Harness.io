@@ -68,65 +68,58 @@ pipeline:
               action:
                 type: StageRollback
     - stage:
-        name: Deploy NGINX to EC2
-        identifier: deploy_nginx_ec2
-        type: Custom
+        name: Deploy NGINX to ECS
+        identifier: deploy_nginx_ecs
+        type: Deployment
         spec:
+          deploymentType: ECS
+          service:
+            serviceRef: nginx-ecs
+            serviceInputs:
+              serviceDefinition:
+                type: ECS
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: nginx_image
+                      sources:
+                        - identifier: nginx_image
+                          type: Ecr
+                          spec:
+                            imagePath: 680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx
+                            tag: latest
+          environment:
+            environmentRef: production
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: nginxecs
           execution:
             steps:
               - step:
-                  name: Deploy Container from ECR
-                  identifier: deploy_container
-                  type: ShellScript
+                  name: Deploy ECS Service
+                  identifier: deploy_ecs
+                  type: EcsRollingDeploy
                   spec:
-                    shell: Bash
-                    onDelegate: true
-                    image: amazon/aws-cli:2.15.28
-                    source:
-                      type: Inline
-                      spec:
-                        script: |
-                          AWS_REGION="ap-south-1"
-                          ECR_REPO="680871073643.dkr.ecr.ap-south-1.amazonaws.com/nginx"
-
-                          echo "🔧 Installing Docker..."
-                           apt update -y
-                           apt install -y docker.io
-                           systemctl start docker
-                           systemctl enable docker
-
-                          echo "🔐 Logging into ECR..."
-                          aws ecr get-login-password --region "$AWS_REGION" \
-                            |  docker login --username AWS --password-stdin "$ECR_REPO"
-
-                          echo "📦 Pulling image from ECR..."
-                           docker pull "$ECR_REPO:latest"
-
-                          echo "🧹 Cleaning old container..."
-                           docker stop nginx || true
-                           docker rm nginx || true
-
-                          echo "🚀 Running NGINX container..."
-                           docker run -d --name nginx -p 80:80 "$ECR_REPO:latest"
+                    sameAsAlreadyRunningInstances: false
               - step:
                   name: Health Check
                   identifier: health_check
                   type: ShellScript
                   spec:
                     shell: Bash
-                    onDelegate: true
+                    onDelegate: false
                     source:
                       type: Inline
                       spec:
                         script: |
-                          echo "🩺 Checking if NGINX is up..."
-                          sleep 5
-                          curl --fail http://localhost:80 || exit 1
-          environment:
-            environmentRef: production
-            deployToAll: false
-            infrastructureDefinitions:
-              - identifier: nginxecs
+                          echo "🩺 Verifying ECS service..."
+                          TASK_ARN=$(aws ecs list-tasks --cluster nginx-cluster --desired-status RUNNING --query 'taskArns[0]' --output text)
+                          echo "Running task: $TASK_ARN"
+                          if [ "$TASK_ARN" = "None" ]; then
+                            echo "❌ No running task found."
+                            exit 1
+                          fi
+          rollbackSteps: []
         failureStrategies:
           - onFailure:
               errors:
@@ -134,4 +127,4 @@ pipeline:
               action:
                 type: StageRollback
         delegateSelectors:
-          - docker5-delegate
+          - docker7-delegate
